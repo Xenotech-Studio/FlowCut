@@ -62,14 +62,7 @@ export default function CropOverlay({ videoWidth, videoHeight, crop, onChange })
       const dx = p.x - drag.startSrcX
       const dy = p.y - drag.startSrcY
       let next
-      if (drag.mode === 'create') {
-        next = {
-          x: Math.min(drag.startSrcX, p.x),
-          y: Math.min(drag.startSrcY, p.y),
-          width: Math.abs(p.x - drag.startSrcX),
-          height: Math.abs(p.y - drag.startSrcY),
-        }
-      } else if (drag.mode === 'move') {
+      if (drag.mode === 'move') {
         const init = drag.initialCrop
         next = { ...init, x: init.x + dx, y: init.y + dy }
       } else if (drag.mode.startsWith('resize-')) {
@@ -107,11 +100,7 @@ export default function CropOverlay({ videoWidth, videoHeight, crop, onChange })
   const fmtPct = (v, total) => `${(v / total) * 100}%`
 
   return (
-    <div
-      ref={ref}
-      className="crop-overlay"
-      onMouseDown={(e) => beginDrag('create', e)}
-    >
+    <div ref={ref} className="crop-overlay">
       {visible && (
         <>
           {/* 暗化区外侧 */}

@@ -18,7 +18,8 @@ export default defineConfig({
     },
   },
   server: {
-    host: true,
-    port: 4100,
+    host: '0.0.0.0', // 对公网开放
+    port: 5177,
+    strictPort: true, // 端口被占用直接报错而不是自动 +1，避免跑去别处
   },
 })

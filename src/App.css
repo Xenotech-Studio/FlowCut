@@ -1,29 +1,212 @@
 .app {
   max-width: 960px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 16px 24px 72px;
 }
 
-.header {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 32px;
-}
-.header h1 {
-  font-size: 28px;
-  margin: 0;
-  letter-spacing: 0.5px;
-}
-.header .tagline {
-  color: var(--text-dim);
-  font-size: 13px;
-}
-.header .version {
-  margin-left: auto;
-  color: var(--text-dim);
-  font-size: 12px;
+.version-footer {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 11px;
+  letter-spacing: 0.4px;
   font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  user-select: none;
+  z-index: 5;
+}
+.version-footer-num {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ===== App bar (top): clip chip on left, export on right ===== */
+.app-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0 16px;
+  margin-bottom: 8px;
+}
+
+.clip-chip {
+  position: relative;
+}
+.clip-thumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 9px;
+  overflow: hidden;
+  position: relative;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  cursor: default;
+}
+.clip-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.clip-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1c2029, #14171d);
+}
+.clip-edit-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--ok);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+/* Hover bridge：让光标从 thumb 走到 popup 中间不丢 hover */
+.clip-chip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 280px;
+  height: 10px;
+  pointer-events: none;
+}
+.clip-chip:hover::after {
+  pointer-events: auto;
+}
+
+.clip-popup {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: 280px;
+  background: rgba(23, 26, 33, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  gap: 6px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-2px);
+  transition: opacity 110ms ease-out 80ms, transform 110ms ease-out 80ms,
+    visibility 0s linear 200ms;
+  z-index: 30;
+}
+.clip-chip:hover .clip-popup {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition: opacity 110ms ease-out, transform 110ms ease-out, visibility 0s;
+}
+
+.clip-popup-name {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+  word-break: break-all;
+  margin-bottom: 4px;
+}
+.clip-popup-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.clip-popup-row span:last-child {
+  color: var(--text);
+}
+.clip-popup-row-edit {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+.clip-popup-row-edit span:last-child {
+  color: var(--ok);
+}
+.clip-popup-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.clip-popup-actions button.ghost {
+  flex: 1 1 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+}
+.clip-popup-actions button.ghost:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.clip-popup-actions button.ghost:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.app-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.undo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 100ms, color 100ms, background 100ms;
+}
+.undo-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.undo-btn:disabled {
+  color: var(--text-dim);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.undo-btn svg { width: 14px; height: 14px; }
+
+.export-btn {
+  padding: 9px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent-strong);
+  border: 1px solid var(--accent-strong);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 100ms, border-color 100ms;
+  font-variant-numeric: tabular-nums;
+}
+.export-btn:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.export-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .drop {
@@ -54,7 +237,7 @@
 .drop-btn input { display: none; }
 .drop-hint { color: var(--text-dim); font-size: 12px; margin-top: 18px; }
 
-.editor { display: grid; gap: 24px; }
+.editor { display: grid; gap: 16px; }
 
 .player {
   background: var(--panel);
@@ -68,6 +251,7 @@
   background: #000;
   max-height: 70vh;
   margin: 0 auto;
+  overflow: hidden;
 }
 .player-area video {
   display: block;
@@ -75,29 +259,177 @@
   height: 100%;
   object-fit: contain;
 }
-.player .meta {
-  display: flex;
-  gap: 16px;
-  padding: 10px 14px;
-  font-size: 12px;
-  color: var(--text-dim);
-  align-items: center;
-  border-top: 1px solid var(--border);
+/* CSS crop 模式下，video 用 inline style 显式定位/缩放，无需 object-fit 限制 */
+.player-area.with-css-crop video {
+  object-fit: fill;
 }
-.player .meta button.link {
-  margin-left: auto;
+
+/* ===== Custom video player controls ===== */
+.player-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.35) 40%,
+    rgba(0, 0, 0, 0.75) 100%
+  );
+  z-index: 8;
+  user-select: none;
+}
+.pc-btn {
   background: transparent;
   border: none;
-  color: var(--accent);
-  padding: 0;
+  color: #fff;
   cursor: pointer;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  flex: 0 0 auto;
+  transition: background 100ms;
 }
-.player .meta button.link:hover { text-decoration: underline; }
+.pc-btn:hover { background: rgba(255, 255, 255, 0.14); }
+.pc-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.pc-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  font-variant-numeric: tabular-nums;
+  min-width: 46px;
+  flex: 0 0 auto;
+}
+.pc-time-right { text-align: right; }
+.pc-track {
+  position: relative;
+  flex: 1 1 0;
+  height: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.pc-track-bg,
+.pc-track-trim,
+.pc-track-played {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 4px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.pc-track-bg {
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.22);
+}
+.pc-track-trim {
+  background: rgba(255, 204, 77, 0.45);
+}
+.pc-track-played {
+  left: 0;
+  background: var(--accent);
+}
+.pc-track-head {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  transition: width 80ms, height 80ms;
+}
+.pc-track:hover .pc-track-head {
+  width: 14px;
+  height: 14px;
+}
 
+/* ===== Floating tool icons (top-left of player) ===== */
+.floating-tools {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+.floating-tool {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 17, 21, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.78);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 100ms, color 100ms, border-color 100ms;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.floating-tool:hover:not(:disabled) {
+  background: rgba(45, 50, 62, 0.88);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.floating-tool.active {
+  background: var(--accent-strong);
+  color: #fff;
+  border-color: var(--accent);
+}
+.floating-tool:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.floating-tool svg {
+  width: 17px;
+  height: 17px;
+}
+.floating-tip {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.88);
+  color: #fff;
+  padding: 4px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 80ms ease-out 80ms;
+}
+.floating-tool:hover .floating-tip {
+  opacity: 1;
+}
+
+/* ===== Crop overlay (only when crop tool active) ===== */
+/* Background is click-through so native video controls remain usable;
+   only the rect + handles intercept events. */
 .crop-overlay {
   position: absolute;
   inset: 0;
-  cursor: crosshair;
+  pointer-events: none;
   user-select: none;
 }
 .crop-mask {
@@ -112,6 +444,7 @@
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
   cursor: move;
   box-sizing: border-box;
+  pointer-events: auto;
 }
 .crop-handle {
   position: absolute;
@@ -121,60 +454,167 @@
   border: 1.5px solid #fff;
   border-radius: 2px;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
 }
 .crop-handle.h-nw { top: -7px; left: -7px; cursor: nwse-resize; }
 .crop-handle.h-ne { top: -7px; right: -7px; cursor: nesw-resize; }
 .crop-handle.h-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
 .crop-handle.h-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
 
-.controls {
+/* ===== Tool panel (only when tool active) ===== */
+.tool-panel {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 20px;
+  padding: 16px;
   display: grid;
   gap: 16px;
 }
-
-.range-row {
+.tool-panel-body {
   display: grid;
-  grid-template-columns: 140px 1fr;
-  align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
-.range-row label {
-  font-size: 13px;
+.tool-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.tool-actions button.primary {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: white;
+  min-width: 88px;
+}
+.tool-actions button.primary:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.tool-todo {
+  padding: 24px;
+  text-align: center;
   color: var(--text-dim);
-  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  background: var(--panel-2);
+  border-radius: 8px;
 }
-.range-row input[type='range'] {
+
+/* ===== Mosaic overlay + tool options ===== */
+.mosaic-live-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  z-index: 1;
+}
+.mosaic-overlay {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+  user-select: none;
+  pointer-events: auto;
+  z-index: 2;
+}
+.mosaic-rect {
+  position: absolute;
+  border: 1.5px solid #ff9a3c;
+  background: rgba(255, 154, 60, 0.06);
+  cursor: move;
+  box-sizing: border-box;
+}
+.mosaic-rect.selected {
+  border-color: #ffcc4d;
+  border-width: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 12px rgba(255, 204, 77, 0.5);
+  z-index: 2;
+}
+.mosaic-handle {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  background: #ffcc4d;
+  border: 1.5px solid #fff;
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+.mh-nw { top: -7px; left: -7px; cursor: nwse-resize; }
+.mh-ne { top: -7px; right: -7px; cursor: nesw-resize; }
+.mh-sw { bottom: -7px; left: -7px; cursor: nesw-resize; }
+.mh-se { bottom: -7px; right: -7px; cursor: nwse-resize; }
+.mosaic-delete {
+  position: absolute;
+  top: -11px;
+  right: -11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ff6b6b;
+  color: #fff;
+  border: 2px solid var(--bg);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-weight: bold;
+}
+.mosaic-delete:hover { background: #ff8585; }
+
+.mosaic-options {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+.mosaic-info {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.mosaic-slider {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.mosaic-slider label {
+  font-size: 13px;
+  color: var(--text);
+}
+.mosaic-slider input[type='range'] {
   width: 100%;
   accent-color: var(--accent-strong);
 }
-
-.range-summary {
+.mosaic-size-val {
   font-size: 12px;
   color: var(--text-dim);
-  padding-left: 154px;
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+  text-align: right;
+}
+.mosaic-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.55;
 }
 
-.crop-toggle-row {
+/* ===== Crop tool options ===== */
+.crop-options {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--border);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-2);
   flex-wrap: wrap;
 }
-.switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  cursor: pointer;
-}
-.switch input { accent-color: var(--accent-strong); }
 .aspect-presets {
   display: flex;
   gap: 6px;
@@ -191,12 +631,198 @@
   font-variant-numeric: tabular-nums;
 }
 
-.actions {
+/* ===== Trim tool timeline ===== */
+.timeline {
+  display: grid;
+  gap: 8px;
+}
+.timeline-row {
   display: flex;
-  gap: 12px;
+  align-items: stretch;
+  gap: 10px;
+}
+.timeline-row > .timeline-strip {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.tl-play-btn {
+  flex: 0 0 auto;
+  width: 40px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 100ms, color 100ms, background 100ms;
+}
+.tl-play-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(110, 168, 255, 0.06);
+}
+.tl-play-btn svg { width: 18px; height: 18px; display: block; }
+
+.timeline-strip {
+  position: relative;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  /* 兜底色：跟占位纹理同色，避免圆角/边框/动画抖动时露出深色背景 */
+  background: #181c24;
+  border: 1px solid var(--border);
+  user-select: none;
+}
+.tl-thumbs {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  /* 兜底色：cell 之间任何亚像素 gap，或 prev 收缩动画里被露出的位置，
+     用一个与 .tl-thumb-tex 渐变色调一致的纯色顶住，绝不透出 strip 的近黑底 */
+  background: #181c24;
+}
+/* 扩窗过渡期间叠在上面的"前一窗口" snapshot：从 100% 宽过渡到内层 rect，
+   两侧露出下层（新窗口）正在加载的占位与新缩略图 */
+.tl-thumbs-prev {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.tl-thumb {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  border-right: 1px solid rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.tl-thumb:last-child { border-right: 0; }
+/* 永远铺底的占位纹理：扩窗动画期间让两侧"露出"的也是它，给外扩留出视觉空间 */
+.tl-thumb-tex {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #15181f, #1c2029, #15181f);
+  pointer-events: none;
+}
+.tl-thumb-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 700ms ease-out;
+}
+/* 扩窗动画的"压暗段"：img 瞬间隐到 0，等横向到位时再 700ms 淡入 */
+.tl-thumb-img.pending {
+  opacity: 0;
+  transition: none;
+}
+.tl-dim {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(8, 10, 14, 0.65);
+  pointer-events: none;
+  z-index: 2;
+  transition: left 400ms ease-out, width 400ms ease-out;
+}
+.tl-dim-left { left: 0; }
+.tl-dim-right { right: 0; }
+.tl-selection {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-top: 3px solid #ffcc4d;
+  border-bottom: 3px solid #ffcc4d;
+  cursor: grab;
+  box-sizing: border-box;
+  z-index: 3;
+  transition: left 400ms ease-out, width 400ms ease-out;
+}
+.tl-selection:active { cursor: grabbing; }
+/* 拖动期间禁用过渡，否则把手会跟不上鼠标 */
+.timeline-strip.dragging .tl-selection,
+.timeline-strip.dragging .tl-dim {
+  transition: none;
+}
+.tl-handle {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 10px;
+  background: #ffcc4d;
+  cursor: ew-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tl-handle::after {
+  content: '';
+  width: 2px;
+  height: 18px;
+  background: rgba(40, 30, 0, 0.45);
+  border-radius: 1px;
+}
+.tl-handle-in { left: -5px; border-radius: 3px 0 0 3px; }
+.tl-handle-out { right: -5px; border-radius: 0 3px 3px 0; }
+.tl-playhead {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  z-index: 4;
+}
+.tl-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  font-size: 12px;
+  background: rgba(15, 17, 21, 0.5);
+  pointer-events: none;
+}
+.timeline-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.timeline-times .dur {
+  color: var(--text);
 }
 
+/* ===== Op result toast + error ===== */
+.op-toast {
+  font-size: 13px;
+  color: var(--ok);
+  padding: 8px 12px;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.07);
+  border-radius: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.op-toast.op-toast-progress {
+  color: var(--accent);
+  border-color: rgba(110, 168, 255, 0.3);
+  background: rgba(110, 168, 255, 0.07);
+}
 .error {
   color: var(--danger);
   font-size: 13px;
@@ -204,38 +830,4 @@
   border: 1px solid rgba(255, 107, 107, 0.3);
   border-radius: 8px;
   background: rgba(255, 107, 107, 0.06);
-}
-
-.result {
-  border-top: 1px solid var(--border);
-  padding-top: 16px;
-  display: grid;
-  gap: 8px;
-}
-.result-row {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  font-size: 13px;
-  color: var(--text);
-}
-.result-row .k { color: var(--text-dim); }
-.result-row .v { font-variant-numeric: tabular-nums; }
-.result-row .v.big {
-  color: var(--ok);
-  font-weight: 600;
-  font-size: 15px;
-}
-
-.as-btn {
-  display: inline-block;
-  text-decoration: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-}
-
-.hint {
-  font-size: 12px;
-  color: var(--text-dim);
-  line-height: 1.6;
-  padding-top: 4px;
 }
