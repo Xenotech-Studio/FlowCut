@@ -3,6 +3,7 @@
     "version": "0.0.11",
     "date": "2026-05-15",
     "changes": [
+      "新增 FlowCut 应用图标：favicon.ico + icons/Icon_FlowCut_Colored_Flat_NxN.png 系列（32/64/128/256），四角抠透明，圆角能融进深色页面",
       "Trim 工具再次进入时 Timeline 只覆盖当前 trim ± 10%，缩略图也按这个窗口取样；拖把手到外侧 margin 区松手 1 秒后按新 trim 扩窗，单调只扩不收；扩窗时新缩略图层与旧 snapshot 共用同一 scale 同步缩窄（新层从超出 strip 的尺度缩回 strip，旧层从 strip 缩到新窗口内层），全程整条 strip 都被覆盖、不露背景，到位后跟新缩略图 700ms 对穿淡入淡出",
       "Trim 工具激活时藏掉视频底部 PlayerControls，把播放按钮直接放进 Timeline 左侧——避免两条进度条同时存在",
       "Timeline 缩略图加模块级缓存：同一段源反复进出 trim 工具不再重新抽帧；新加的 onThumb 回调让缩略图边抽边显示，不必等全部完成才有画面",
