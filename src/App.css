@@ -3,6 +3,13 @@
   margin: 0 auto;
   padding: 16px 24px 72px;
 }
+/* 没加载视频时让欢迎卡在视口中垂直居中 */
+.app.app-empty {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
 
 .version-footer {
   position: fixed;
@@ -212,10 +219,18 @@
 .drop {
   border: 1.5px dashed var(--border);
   border-radius: 14px;
-  padding: 64px 24px;
+  padding: 32px 24px;
   text-align: center;
   background: var(--panel);
   transition: border-color 150ms, background 150ms;
+  aspect-ratio: 1.618 / 1;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 .drop.over {
   border-color: var(--accent);

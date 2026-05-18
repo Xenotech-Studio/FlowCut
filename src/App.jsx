@@ -146,9 +146,10 @@ export default function App() {
     edits.mosaic.regions.length > 0 &&
     activeTool !== 'mosaic'
 
-  // 容器 aspect：crop 工具激活时按源（要看全图框选）；其他时候按 crop（若设过）
+  // 容器 aspect：crop 工具激活时按源（要看全图框选）；其他时候按 crop（若设过）；
+  // 视频元信息还没拿到时用黄金分割比占位，避免播放区塌成 0 高度
   const containerAspect = useMemo(() => {
-    if (!sourceInfo) return undefined
+    if (!sourceInfo) return '1.618 / 1'
     if (activeTool === 'crop') {
       return `${sourceInfo.width} / ${sourceInfo.height}`
     }
@@ -372,8 +373,30 @@ export default function App() {
   }, [])
 
   const onPick = (e) => acceptFile(e.target.files?.[0])
-  const onDrop = (e) => {
+  // dragenter/dragleave 在子元素之间会反复触发，用计数器避免 over 高亮闪烁
+  const dragDepthRef = useRef(0)
+  const onPageDragEnter = (e) => {
+    if (sourceFile) return
     e.preventDefault()
+    dragDepthRef.current += 1
+    setDragOver(true)
+  }
+  const onPageDragOver = (e) => {
+    if (sourceFile) return
+    e.preventDefault()
+  }
+  const onPageDragLeave = (e) => {
+    if (sourceFile) return
+    dragDepthRef.current -= 1
+    if (dragDepthRef.current <= 0) {
+      dragDepthRef.current = 0
+      setDragOver(false)
+    }
+  }
+  const onPageDrop = (e) => {
+    if (sourceFile) return
+    e.preventDefault()
+    dragDepthRef.current = 0
     setDragOver(false)
     acceptFile(e.dataTransfer.files?.[0])
   }
@@ -619,7 +642,13 @@ export default function App() {
   }, [exportProgress])
 
   return (
-    <div className="app">
+    <div
+      className={`app ${!sourceFile ? 'app-empty' : ''}`}
+      onDragEnter={onPageDragEnter}
+      onDragOver={onPageDragOver}
+      onDragLeave={onPageDragLeave}
+      onDrop={onPageDrop}
+    >
       {sourceFile && (
         <div className="app-bar">
           <ClipChip
@@ -651,8 +680,8 @@ export default function App() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                <path d="M3 7v6h6" />
-                <path d="M3 13a9 9 0 1 0 3-6.7L3 9" />
+                <path d="M9 14 4 9l5-5" />
+                <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
               </svg>
               <span>撤销</span>
             </button>
@@ -676,15 +705,7 @@ export default function App() {
       )}
 
       {!sourceFile && (
-        <div
-          className={`drop ${dragOver ? 'over' : ''}`}
-          onDragOver={(e) => {
-            e.preventDefault()
-            setDragOver(true)
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-        >
+        <div className={`drop ${dragOver ? 'over' : ''}`}>
           <div className="drop-title">把视频拖进来</div>
           <div className="drop-sub">或</div>
           <label className="drop-btn">
