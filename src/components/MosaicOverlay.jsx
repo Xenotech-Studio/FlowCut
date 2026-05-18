@@ -25,6 +25,9 @@ function newId() {
   return `m${Date.now().toString(36)}${_idSeq}`
 }
 
+// 点击与拖拽的分界：源像素距离小于此值视为单击，不创建新框
+const CREATE_DRAG_THRESHOLD = 6
+
 /**
  * 多矩形打码区编辑器。regions 与 onChange 受控。
  * 在视频上拖空白处 = 画新框；点击已有框 = 选中；选中后能拖动/调角/× 删除。
@@ -33,6 +36,8 @@ export default function MosaicOverlay({ videoWidth, videoHeight, regions, onChan
   const ref = useRef(null)
   const [drag, setDrag] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
+  // pending-create 阶段已经转 create 的旗标，防止同一次 mousedown 内重复创建
+  const pendingCommittedRef = useRef(false)
 
   const eventToSrc = (e) => {
     const el = ref.current
@@ -51,11 +56,11 @@ export default function MosaicOverlay({ videoWidth, videoHeight, regions, onChan
     if (e.target !== e.currentTarget) return
     e.preventDefault()
     const p = eventToSrc(e)
-    const id = newId()
-    const fresh = { id, x: p.x, y: p.y, width: 4, height: 4 }
-    onChange([...regions, fresh])
-    setSelectedId(id)
-    setDrag({ mode: 'create', id, startSrcX: p.x, startSrcY: p.y, initial: fresh })
+    // 点空白先立即取消当前选中（这是单击的核心意图）；
+    // 暂不入库新框，等到 mousemove 拖出 CREATE_DRAG_THRESHOLD 才真正创建
+    setSelectedId(null)
+    pendingCommittedRef.current = false
+    setDrag({ mode: 'pending-create', startSrcX: p.x, startSrcY: p.y })
   }
 
   const beginInteract = (id, mode, e) => {
@@ -84,6 +89,36 @@ export default function MosaicOverlay({ videoWidth, videoHeight, regions, onChan
     if (!drag) return
     const onMove = (e) => {
       const p = eventToSrc(e)
+      // pending-create：拖出阈值前不入库，避免单击留下小残块
+      if (drag.mode === 'pending-create') {
+        if (pendingCommittedRef.current) return
+        const ddx = p.x - drag.startSrcX
+        const ddy = p.y - drag.startSrcY
+        if (Math.hypot(ddx, ddy) < CREATE_DRAG_THRESHOLD) return
+        pendingCommittedRef.current = true
+        const id = newId()
+        const fresh = clampRegion(
+          {
+            id,
+            x: Math.min(drag.startSrcX, p.x),
+            y: Math.min(drag.startSrcY, p.y),
+            width: Math.abs(ddx),
+            height: Math.abs(ddy),
+          },
+          videoWidth,
+          videoHeight,
+        )
+        onChange([...regions, fresh])
+        setSelectedId(id)
+        setDrag({
+          mode: 'create',
+          id,
+          startSrcX: drag.startSrcX,
+          startSrcY: drag.startSrcY,
+          initial: fresh,
+        })
+        return
+      }
       const dx = p.x - drag.startSrcX
       const dy = p.y - drag.startSrcY
       const next = regions.map((r) => {

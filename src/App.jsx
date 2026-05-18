@@ -40,6 +40,16 @@ function fmtDuration(ms) {
   return `${(ms / 1000).toFixed(2)} s`
 }
 
+// mosaic region 与 crop 框求交：完全在外返回 null
+function clipRegionToCrop(r, c) {
+  const x1 = Math.max(r.x, c.x)
+  const y1 = Math.max(r.y, c.y)
+  const x2 = Math.min(r.x + r.width, c.x + c.width)
+  const y2 = Math.min(r.y + r.height, c.y + c.height)
+  if (x2 - x1 < 1 || y2 - y1 < 1) return null
+  return { ...r, x: x1, y: y1, width: x2 - x1, height: y2 - y1 }
+}
+
 function centeredAspect(vw, vh, aspectW, aspectH) {
   const ratio = aspectW / aspectH
   let w, h
@@ -128,21 +138,18 @@ export default function App() {
 
   const edited = !isEditsEmpty(edits)
 
-  // 是否在显示中应用 crop（trim / crop 工具激活时显示源以便重新框选）
-  const shouldCSSCrop =
-    !!edits.crop && activeTool !== 'crop' && activeTool !== 'trim'
-  // mosaic 是否要叠在画面上
+  // 是否在显示中应用 crop（仅 crop 工具激活时显示源便于重新框选；trim/mosaic 都按 crop 结果预览）
+  const shouldCSSCrop = !!edits.crop && activeTool !== 'crop'
+  // mosaic 预览（无编辑 chrome）：mosaic 工具自己渲带 chrome 的版本，其余场景都叠这个
   const shouldOverlayMosaic =
     edits.mosaic &&
     edits.mosaic.regions.length > 0 &&
-    activeTool !== 'mosaic' &&
-    activeTool !== 'trim' &&
-    activeTool !== 'crop'
+    activeTool !== 'mosaic'
 
-  // 容器 aspect：trim/crop 工具激活时按源；其他时候按 crop（若设过）
+  // 容器 aspect：crop 工具激活时按源（要看全图框选）；其他时候按 crop（若设过）
   const containerAspect = useMemo(() => {
     if (!sourceInfo) return undefined
-    if (activeTool === 'trim' || activeTool === 'crop') {
+    if (activeTool === 'crop') {
       return `${sourceInfo.width} / ${sourceInfo.height}`
     }
     if (edits.crop) return `${edits.crop.width} / ${edits.crop.height}`
@@ -165,38 +172,48 @@ export default function App() {
     }
   }, [shouldCSSCrop, edits.crop, sourceInfo])
 
-  // mosaic 实时预览的画布尺寸：CSS crop 时 = crop 尺寸，否则 = 源尺寸
+  // mosaic 预览画布尺寸：crop 工具时按源（要露全图），其余按 crop（若设过）
   const previewCanvasDims = useMemo(() => {
     if (!sourceInfo) return null
-    if (activeTool === 'crop' || activeTool === 'trim') {
+    if (activeTool === 'crop') {
       return { w: sourceInfo.width, h: sourceInfo.height }
     }
     if (edits.crop) return { w: edits.crop.width, h: edits.crop.height }
     return { w: sourceInfo.width, h: sourceInfo.height }
   }, [activeTool, edits.crop, sourceInfo])
 
-  // mosaic 实时预览的 source 偏移
+  // mosaic 预览的 source 偏移：CSS crop 视图下，画布 (0,0) 对应源 (crop.x, crop.y)
   const previewSourceOffset = useMemo(() => {
     if (shouldCSSCrop && edits.crop) {
       return { x: edits.crop.x, y: edits.crop.y }
     }
-    if (activeTool === 'mosaic' && edits.crop) {
-      // mosaic 工具时也按 edits.crop 偏移（因为 mosaic 工具看的是 cropped 视图）
-      return { x: edits.crop.x, y: edits.crop.y }
-    }
     return { x: 0, y: 0 }
-  }, [shouldCSSCrop, activeTool, edits.crop])
+  }, [shouldCSSCrop, edits.crop])
 
-  // 给"非工具态"的 MosaicLivePreview 准备显示坐标的 regions
+  // 给非 mosaic 工具时的 MosaicLivePreview 准备显示坐标的 regions：
+  // - crop 工具激活时画布显示源视图，传完整 region（视觉上靠 clipRect 限制到 crop 框内，
+  //   避免 region 缩水导致 block 网格抖动）
+  // - 其他情况若 CSS crop 生效则减掉 crop 偏移
   const overlayMosaicRegions = useMemo(() => {
     if (!shouldOverlayMosaic) return []
-    const off = edits.crop ? { x: edits.crop.x, y: edits.crop.y } : { x: 0, y: 0 }
+    if (activeTool === 'crop') {
+      return edits.mosaic.regions
+    }
+    const off = shouldCSSCrop && edits.crop
+      ? { x: edits.crop.x, y: edits.crop.y }
+      : { x: 0, y: 0 }
     return edits.mosaic.regions.map((r) => ({
       ...r,
       x: r.x - off.x,
       y: r.y - off.y,
     }))
-  }, [shouldOverlayMosaic, edits.mosaic, edits.crop])
+  }, [shouldOverlayMosaic, shouldCSSCrop, activeTool, edits.mosaic, edits.crop])
+
+  // crop 工具激活时，mosaic 预览按当前 in-progress crop 框做视觉裁剪
+  const overlayMosaicClipRect = useMemo(() => {
+    if (activeTool === 'crop' && crop) return crop
+    return null
+  }, [activeTool, crop])
 
   // 源 URL 与元信息
   useEffect(() => {
@@ -402,7 +419,12 @@ export default function App() {
       if (edits.crop) {
         setCrop({ ...edits.crop })
       } else if (sourceInfo) {
-        setCrop(centeredAspect(sourceInfo.width, sourceInfo.height, 1, 1))
+        setCrop({
+          x: 0,
+          y: 0,
+          width: sourceInfo.width & ~1,
+          height: sourceInfo.height & ~1,
+        })
       }
     } else if (id === 'mosaic') {
       // 把存的 source 坐标 region 转成显示坐标（= 减去 crop 偏移）
@@ -451,6 +473,15 @@ export default function App() {
     } else if (activeTool === 'crop') {
       if (!crop) return
       nextEdits = { ...edits, crop: { ...crop } }
+      // 应用新 crop 时同步裁掉超出新框的 mosaic：完全在外丢弃，部分重叠求交
+      if (edits.mosaic) {
+        const clipped = edits.mosaic.regions
+          .map((r) => clipRegionToCrop(r, crop))
+          .filter(Boolean)
+        nextEdits.mosaic = clipped.length > 0
+          ? { ...edits.mosaic, regions: clipped }
+          : null
+      }
     } else if (activeTool === 'mosaic') {
       const off = edits.crop ? { x: edits.crop.x, y: edits.crop.y } : { x: 0, y: 0 }
       const sourceRegions = mosaicRegions.map((r) => ({
@@ -672,7 +703,7 @@ export default function App() {
         <div className="editor">
           <div className="player">
             <div
-              className={`player-area ${shouldCSSCrop ? 'with-css-crop' : ''}`}
+              className={`player-area ${shouldCSSCrop ? 'with-css-crop' : ''} ${activeTool === 'crop' ? 'with-crop-tool' : ''}`}
               style={{ aspectRatio: containerAspect }}
             >
               <video
@@ -691,6 +722,7 @@ export default function App() {
                   regions={overlayMosaicRegions}
                   blockSize={edits.mosaic.blockSize}
                   sourceOffset={previewSourceOffset}
+                  clipRect={overlayMosaicClipRect}
                 />
               )}
               {activeTool === 'crop' && sourceInfo && (
@@ -720,7 +752,7 @@ export default function App() {
                 </>
               )}
               <Toolbar active={activeTool} onChange={onPickTool} locked={exporting} />
-              {sourceInfo && activeTool !== 'trim' && (
+              {sourceInfo && activeTool !== 'trim' && activeTool !== 'crop' && (
                 <PlayerControls
                   videoRef={videoRef}
                   duration={sourceInfo.duration}

@@ -1,8 +1,13 @@
 [
   {
     "version": "0.0.11",
-    "date": "2026-05-15",
+    "date": "2026-05-18",
     "changes": [
+      "Crop 工具调整框时 mosaic 预览按当前 crop 做 ctx.clip 视觉裁切，block 网格不再抖；应用 crop 才同步丢弃超出新框的 mosaic 数据",
+      "Crop/Trim 工具中也叠出无 chrome 的 mosaic 预览；Trim 工具按 crop 结果显示画面，所见即所得；拖进度条 seek 时跟着新帧重画，不再闪空或卡旧帧",
+      "Mosaic 工具点画面空白处只取消当前框焦点，不再瞬间塞一个微型框；mousedown 起拖位移过阈值才真创建",
+      "Crop 框 8 个 handle（四角粗 L + 四边粗短线）全骑在边缘可拖，暗化区改圆角挖洞，handle 不再被画面边缘裁掉",
+      "Crop 工具激活时默认框选整张画面 + 藏掉底部 PlayerControls，避免框选时被进度条干扰",
       "新增 FlowCut 应用图标：favicon.ico + icons/Icon_FlowCut_Colored_Flat_NxN.png 系列（32/64/128/256），四角抠透明，圆角能融进深色页面",
       "Trim 工具再次进入时 Timeline 只覆盖当前 trim ± 10%，缩略图也按这个窗口取样；拖把手到外侧 margin 区松手 1 秒后按新 trim 扩窗，单调只扩不收；扩窗时新缩略图层与旧 snapshot 共用同一 scale 同步缩窄（新层从超出 strip 的尺度缩回 strip，旧层从 strip 缩到新窗口内层），全程整条 strip 都被覆盖、不露背景，到位后跟新缩略图 700ms 对穿淡入淡出",
       "Trim 工具激活时藏掉视频底部 PlayerControls，把播放按钮直接放进 Timeline 左侧——避免两条进度条同时存在",

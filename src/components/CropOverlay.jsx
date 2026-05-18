@@ -103,18 +103,20 @@ export default function CropOverlay({ videoWidth, videoHeight, crop, onChange })
     <div ref={ref} className="crop-overlay">
       {visible && (
         <>
-          {/* 暗化区外侧 */}
-          <div
-            className="crop-mask"
-            style={{
-              clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 0,
-                ${fmtPct(crop.x, videoWidth)} ${fmtPct(crop.y, videoHeight)},
-                ${fmtPct(crop.x, videoWidth)} ${fmtPct(crop.y + crop.height, videoHeight)},
-                ${fmtPct(crop.x + crop.width, videoWidth)} ${fmtPct(crop.y + crop.height, videoHeight)},
-                ${fmtPct(crop.x + crop.width, videoWidth)} ${fmtPct(crop.y, videoHeight)},
-                ${fmtPct(crop.x, videoWidth)} ${fmtPct(crop.y, videoHeight)})`,
-            }}
-          />
+          {/* 暗化区外侧：用 box-shadow 大 spread 反向覆盖，让挖洞跟 L 角同步带 12px 圆角。
+              单独包一层 overflow:hidden，把 9999px 阴影限制在 player-area 范围内，
+              又不连累 sibling 的 .crop-rect handle 被裁。 */}
+          <div className="crop-mask-clip">
+            <div
+              className="crop-mask"
+              style={{
+                left: fmtPct(crop.x, videoWidth),
+                top: fmtPct(crop.y, videoHeight),
+                width: fmtPct(crop.width, videoWidth),
+                height: fmtPct(crop.height, videoHeight),
+              }}
+            />
+          </div>
           <div
             className="crop-rect"
             style={{
@@ -125,7 +127,7 @@ export default function CropOverlay({ videoWidth, videoHeight, crop, onChange })
             }}
             onMouseDown={(e) => beginDrag('move', e)}
           >
-            {['nw', 'ne', 'sw', 'se'].map((side) => (
+            {['nw', 'ne', 'sw', 'se', 'n', 'e', 's', 'w'].map((side) => (
               <div
                 key={side}
                 className={`crop-handle h-${side}`}
